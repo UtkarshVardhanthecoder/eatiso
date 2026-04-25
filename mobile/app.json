@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Eatiso",
+    "slug": "eatiso",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FF6B35"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.eatiso.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FF6B35"
+      },
+      "package": "com.eatiso.app"
+    },
+    "plugins": [
+      "expo-location",
+      "expo-image-picker",
+      "expo-calendar",
+      "expo-notifications"
+    ]
+  }
+}
