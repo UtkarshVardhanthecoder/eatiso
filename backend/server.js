@@ -11,10 +11,15 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/eatiso');
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/eatiso';
+    if (mongoUri.startsWith('mongodb')) {
+      const conn = await mongoose.connect(mongoUri);
+      console.log(`MongoDB Connected: ${conn.connection.host}`);
+    } else {
+      console.log('MongoDB URI not configured - running in demo mode');
+    }
   } catch (error) {
-    console.error(`Error: ${error.message}`);
+    console.log('MongoDB connection skipped:', error.message);
   }
 };
 
