@@ -5,21 +5,21 @@ const cors = require('cors');
 
 const app = express();
 
-app.use(cors({ origin: '*', credentials: true }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 const connectDB = async () => {
   try {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/eatiso';
-    if (mongoUri.startsWith('mongodb')) {
-      const conn = await mongoose.connect(mongoUri);
-      console.log(`MongoDB Connected: ${conn.connection.host}`);
+    const mongoUri = process.env.MONGODB_URI;
+    if (mongoUri && mongoUri.includes('mongodb')) {
+      await mongoose.connect(mongoUri);
+      console.log('MongoDB Connected');
     } else {
-      console.log('MongoDB URI not configured - running in demo mode');
+      console.log('Running without MongoDB');
     }
   } catch (error) {
-    console.log('MongoDB connection skipped:', error.message);
+    console.log('MongoDB error:', error.message);
   }
 };
 
@@ -32,9 +32,7 @@ app.use('/api/reviews', require('./src/routes/reviews'));
 app.use('/api/payments', require('./src/routes/payments'));
 app.use('/api/search', require('./src/routes/search'));
 
-app.get('/health', (req, res) => res.json({ status: 'OK', timestamp: new Date().toISOString() }));
+app.get('/health', (req, res) => res.json({ status: 'OK' }));
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Eatiso API running on port ${PORT}`));
-
-module.exports = app;
+app.listen(PORT, () => console.log('Server running on port', PORT));
