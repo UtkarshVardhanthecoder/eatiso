@@ -34,5 +34,5 @@ app.use('/api/search', require('./src/src/routes/search'));
 
 app.get('/health', (req, res) => res.json({ status: 'OK' }));
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log('Server running on port', PORT));

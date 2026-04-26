@@ -2,14 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { theme } from '../../App';
-
-const DEMO_MEALS = [
-  { id: '1', name: 'Traditional Punjabi Thali', host: 'Priya Sharma', cuisine: 'North Indian', price: 450, rating: 4.8, reviews: 124, image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400', location: 'Mumbai' },
-  { id: '2', name: 'Authentic Biryani Feast', host: 'Ahmed Khan', cuisine: 'Mughlai', price: 550, rating: 4.9, reviews: 89, image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400', location: 'Hyderabad' },
-  { id: '3', name: 'South Indian Sambar Meal', host: 'Lakshmi Reddy', cuisine: 'South Indian', price: 380, rating: 4.7, reviews: 156, image: 'https://images.unsplash.com/photo-1630383249896-424e482df921?w=400', location: 'Chennai' },
-  { id: '4', name: 'Rajasthani Dal Baati', host: 'Ramesh Singh', cuisine: 'Rajasthani', price: 420, rating: 4.6, reviews: 78, image: 'https://images.unsplash.com/photo-1574484284002-952d92456975?w=400', location: 'Jaipur' },
-];
+import { theme, API_URL } from '../../App';
 
 const CATEGORIES = ['All', 'North Indian', 'South Indian', 'Mughlai', 'Rajasthani', 'Gujarati', 'Bengali'];
 
@@ -17,6 +10,19 @@ export default function HomeScreen({ navigation }) {
   const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
+  const [meals, setMeals] = useState([]);
+
+  useEffect(() => {
+    fetchMeals();
+  }, []);
+
+  const fetchMeals = async () => {
+    try {
+      const res = await fetch(`${API_URL}/meals`);
+      const data = await res.json();
+      if (data.success) setMeals(data.meals);
+    } catch (e) { console.log('Error:', e); }
+  };
 
   return (
     <View style={styles.container}>
@@ -48,7 +54,7 @@ export default function HomeScreen({ navigation }) {
           <TouchableOpacity><Text style={styles.seeAll}>See All</Text></TouchableOpacity>
         </View>
         <FlatList
-          horizontal data={DEMO_MEALS} keyExtractor={item => item.id}
+          horizontal data={meals} keyExtractor={item => item.id}
           showsHorizontalScrollIndicator={false} contentContainerStyle={styles.featuredList}
           renderItem={({ item }) => (
             <TouchableOpacity style={styles.featuredCard} onPress={() => navigation.navigate('MealDetail', { meal: item })}>
@@ -56,7 +62,7 @@ export default function HomeScreen({ navigation }) {
               <View style={styles.featuredOverlay}><Text style={styles.featuredPrice}>₹{item.price}</Text></View>
               <View style={styles.featuredInfo}>
                 <Text style={styles.featuredName} numberOfLines={1}>{item.name}</Text>
-                <Text style={styles.featuredHost}>by {item.host}</Text>
+                <Text style={styles.featuredHost}>by {item.host?.name || item.host}</Text>
                 <View style={styles.featuredMeta}><Ionicons name="star" size={14} color="#FFD700" /><Text style={styles.featuredRating}>{item.rating}</Text><Text style={styles.featuredReviews}>({item.reviews})</Text></View>
               </View>
             </TouchableOpacity>
@@ -66,7 +72,7 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Near You</Text>
         </View>
-        {DEMO_MEALS.map(item => (
+        {meals.map(item => (
           <TouchableOpacity key={item.id} style={styles.mealCard} onPress={() => navigation.navigate('MealDetail', { meal: item })}>
             <Image source={{ uri: item.image }} style={styles.mealImg} />
             <View style={styles.mealInfo}>
