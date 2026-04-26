@@ -54,9 +54,6 @@ router.get('/:id', async (req, res) => {
     res.json({ success: true, meal: demo || null });
   }
 });
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
 
 // Create meal (host only)
 router.post('/', auth, async (req, res) => {
