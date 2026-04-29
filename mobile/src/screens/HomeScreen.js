@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, FlatList, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../context/AuthContext';
-import { theme, API_URL } from '../../App';
+import { useAuth } from '../context/AuthContext';
+import { theme, API_URL } from '../theme';
 
 const CATEGORIES = ['All', 'North Indian', 'South Indian', 'Mughlai', 'Rajasthani', 'Gujarati', 'Bengali'];
 
@@ -11,17 +11,39 @@ export default function HomeScreen({ navigation }) {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
   const [meals, setMeals] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchMeals();
   }, []);
 
+  useEffect(() => {
+    if (search || category !== 'All') {
+      filterMeals();
+    }
+  }, [search, category]);
+
   const fetchMeals = async () => {
     try {
+      setLoading(true);
       const res = await fetch(`${API_URL}/meals`);
       const data = await res.json();
-      if (data.success) setMeals(data.meals);
+      if (data.success) setMeals(data.meals || []);
     } catch (e) { console.log('Error:', e); }
+    finally { setLoading(false); }
+  };
+
+  const filterMeals = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (search) params.append('search', search);
+      if (category !== 'All') params.append('cuisine', category);
+      const res = await fetch(`${API_URL}/meals?${params}`);
+      const data = await res.json();
+      if (data.success) setMeals(data.meals || []);
+    } catch (e) { console.log('Error:', e); }
+    finally { setLoading(false); }
   };
 
   return (
@@ -48,41 +70,45 @@ export default function HomeScreen({ navigation }) {
             </TouchableOpacity>
           ))}
         </ScrollView>
-        {/* Featured */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Featured Experiences</Text>
-          <TouchableOpacity><Text style={styles.seeAll}>See All</Text></TouchableOpacity>
-        </View>
-        <FlatList
-          horizontal data={meals} keyExtractor={item => item.id}
-          showsHorizontalScrollIndicator={false} contentContainerStyle={styles.featuredList}
-          renderItem={({ item }) => (
-            <TouchableOpacity style={styles.featuredCard} onPress={() => navigation.navigate('MealDetail', { meal: item })}>
-              <Image source={{ uri: item.image }} style={styles.featuredImg} />
-              <View style={styles.featuredOverlay}><Text style={styles.featuredPrice}>₹{item.price}</Text></View>
-              <View style={styles.featuredInfo}>
-                <Text style={styles.featuredName} numberOfLines={1}>{item.name}</Text>
-                <Text style={styles.featuredHost}>by {item.host?.name || item.host}</Text>
-                <View style={styles.featuredMeta}><Ionicons name="star" size={14} color="#FFD700" /><Text style={styles.featuredRating}>{item.rating}</Text><Text style={styles.featuredReviews}>({item.reviews})</Text></View>
-              </View>
-            </TouchableOpacity>
-          )}
-        />
-        {/* Near You */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Near You</Text>
-        </View>
-        {meals.map(item => (
-          <TouchableOpacity key={item.id} style={styles.mealCard} onPress={() => navigation.navigate('MealDetail', { meal: item })}>
-            <Image source={{ uri: item.image }} style={styles.mealImg} />
-            <View style={styles.mealInfo}>
-              <Text style={styles.mealName}>{item.name}</Text>
-              <Text style={styles.mealCuisine}>{item.cuisine} • {item.location}</Text>
-              <View style={styles.mealMeta}><Ionicons name="star" size={14} color="#FFD700" /><Text style={styles.mealRating}>{item.rating}</Text><Text style={styles.mealReviews}>({item.reviews})</Text></View>
+        {loading ? (
+          <View style={styles.loadingContainer}><ActivityIndicator size="large" color={theme.colors.primary} /></View>
+        ) : (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Featured Experiences</Text>
+              <TouchableOpacity><Text style={styles.seeAll}>See All</Text></TouchableOpacity>
             </View>
-            <View style={styles.mealPrice}><Text style={styles.priceText}>₹{item.price}</Text><Text style={styles.priceSub}>per person</Text></View>
-          </TouchableOpacity>
-        ))}
+            <FlatList
+              horizontal data={meals} keyExtractor={item => item.id}
+              showsHorizontalScrollIndicator={false} contentContainerStyle={styles.featuredList}
+              renderItem={({ item }) => (
+                <TouchableOpacity style={styles.featuredCard} onPress={() => navigation.navigate('MealDetail', { meal: item })}>
+                  <Image source={{ uri: item.image }} style={styles.featuredImg} />
+                  <View style={styles.featuredOverlay}><Text style={styles.featuredPrice}>₹{item.price}</Text></View>
+                  <View style={styles.featuredInfo}>
+                    <Text style={styles.featuredName} numberOfLines={1}>{item.name}</Text>
+                    <Text style={styles.featuredHost}>by {item.host?.name || item.host}</Text>
+                    <View style={styles.featuredMeta}><Ionicons name="star" size={14} color="#FFD700" /><Text style={styles.featuredRating}>{item.rating}</Text><Text style={styles.featuredReviews}>({item.reviews})</Text></View>
+                  </View>
+                </TouchableOpacity>
+              )}
+            />
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Near You</Text>
+            </View>
+            {meals.map(item => (
+              <TouchableOpacity key={item.id} style={styles.mealCard} onPress={() => navigation.navigate('MealDetail', { meal: item })}>
+                <Image source={{ uri: item.image }} style={styles.mealImg} />
+                <View style={styles.mealInfo}>
+                  <Text style={styles.mealName}>{item.name}</Text>
+                  <Text style={styles.mealCuisine}>{item.cuisine} • {item.location}</Text>
+                  <View style={styles.mealMeta}><Ionicons name="star" size={14} color="#FFD700" /><Text style={styles.mealRating}>{item.rating}</Text><Text style={styles.mealReviews}>({item.reviews})</Text></View>
+                </View>
+                <View style={styles.mealPrice}><Text style={styles.priceText}>₹{item.price}</Text><Text style={styles.priceSub}>per person</Text></View>
+              </TouchableOpacity>
+            ))}
+          </>
+        )}
       </ScrollView>
     </View>
   );
@@ -126,4 +152,5 @@ const styles = StyleSheet.create({
   mealPrice: { padding: 12, justifyContent: 'center', alignItems: 'center' },
   priceText: { fontSize: 18, fontWeight: '700', color: theme.colors.primary },
   priceSub: { fontSize: 10, color: theme.colors.textSecondary },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 40 },
 });
